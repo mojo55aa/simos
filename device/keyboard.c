@@ -3,8 +3,8 @@
  * solution:print.S调整put_char流程
 */
 #include "keyboard.h"
-#include "../asm/io.h"
-#include "../asm/print.h"
+#include "../include/asm/io.h"
+#include "../include/asm/print.h"
 #include "debug.h"
 #include "interrupt.h"
 #include "stdint.h"
