@@ -9,9 +9,10 @@
 #include "debug.h"
 
 int main(void) {
-	put_str("i am kernel\n");
+	put_str("total memory: 0x");
 	uint32_t total_mem = (*(uint32_t *)(0xb00));
 	put_hex(total_mem);
+	put_char('\n');
 	init_os();
 	local_irq_enable();
 	while(1);
