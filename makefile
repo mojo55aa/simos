@@ -1,5 +1,5 @@
 BUILD_DIR = ./build
-ENTRY_POINT = 0xc0001500
+ENTRY_POINT = 0xc0015000
 LIB = -I include/asm -I include/os
 C_FLAGS = -Wall -m32 $(LIB) -c -fno-stack-protector -fno-builtin
 LD_FLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main
@@ -44,7 +44,7 @@ $(BUILD_DIR)/kernel.bin : $(OBJS)
 	ld $(LD_FLAGS) $^ -o $@
 
 ###################	tools	#################
-.PYONY : hd mk_dir clean bochs loader mbr all
+.PYONY : hd mk_dir clean bochs loader mbr all rebuild rebuildall
 
 mk_dir:
 	if [ ! -d $(BUILD_DIR) ];then mkdir $(BUILD_DIR);fi
@@ -72,3 +72,5 @@ build : $(BUILD_DIR)/kernel.bin
 bochs:
 	cd /usr/local/bochs-2.6.9 && bochs -f bochsrc
 all: mk_dir build hd bochs
+rebuild: clean all
+rebuildall: clean $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin build mbr loader hd bochs

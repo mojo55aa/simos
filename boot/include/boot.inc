@@ -2,14 +2,17 @@
 
 LOADER_BASE_ADDR equ 0x900 
 LOADER_STACK_TOP equ LOADER_BASE_ADDR
-LOADER_START_SECTOR equ 0x2
+LOADER_START_SECTOR equ 0x2         ;loader程序扇区号
 
-KERNEL_BIN_BASE_ADDR equ 0x70000
-KERNEL_START_SECTOR equ 0x9
-KERNEL_ENTRY_POINT equ 0xc0001500
+KERNEL_BIN_BASE_ADDR equ 0x70000    ;kernel.bin被加载的地址
+KERNEL_START_SECTOR equ 0x9         ;kernel扇区号
+KERNEL_ENTRY_POINT equ 0xc0015000   ;kernel中segment被释放的地址
+
+KERNEL_STACK_TOP equ 0x9f000+PAGE_OFFEST    ;内核栈地址
+PAGE_OFFEST equ 0xc0000000      ;内核页偏移
 
 ;-------------   页表配置   ----------------
-PAGE_DIR_TABLE_POS equ 0x100000
+PAGE_DIR_TABLE_POS equ 0x100000     ;内核页表存放1MB处
 
 ;--------------   gdt描述符属性  -----------
 DESC_G_4K   equ	  1_00000000000000000000000b   

@@ -159,13 +159,13 @@ p_mode_start:
 
    ;将gdt描述符中视频段描述符中的段基址+0xc0000000
    mov ebx, [gdt_ptr + 2]  
-   or dword [ebx + 0x18 + 4], 0xc0000000      ;视频段是第3个段描述符,每个描述符是8字节,故0x18。
+   or dword [ebx + 0x18 + 4], PAGE_OFFEST      ;视频段是第3个段描述符,每个描述符是8字节,故0x18。
 					      ;段描述符的高4字节的最高位是段基址的31~24位
 
    ;将gdt的基址加上0xc0000000使其成为内核所在的高地址
-   add dword [gdt_ptr + 2], 0xc0000000
+   add dword [gdt_ptr + 2], PAGE_OFFEST
 
-   add esp, 0xc0000000        ; 将栈指针同样映射到内核地址
+   add esp, PAGE_OFFEST        ; 将栈指针同样映射到内核地址
 
    ; 把页目录地址赋给cr3
    mov eax, PAGE_DIR_TABLE_POS
@@ -186,7 +186,7 @@ p_mode_start:
 enter_kernel:    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    call kernel_init
-   mov esp, 0xc009f000
+   mov esp, KERNEL_STACK_TOP
    jmp KERNEL_ENTRY_POINT                 ; 用地址0x1500访问测试，结果ok
 
 
