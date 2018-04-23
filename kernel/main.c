@@ -15,7 +15,8 @@ int main(void) {
 	put_char('\n');
 	init_os();
 	local_irq_enable();
-	*(uint32_t *)(0xc1000000) = 0;
+	//测试缺页异常
+	//*(uint32_t *)(0xc1000000) = 0;
 	while (1)
 		;
 	return 0;

@@ -13,7 +13,7 @@
 
 /*内存的一些定义*/
 #define KERNEL_STACK_TOP (PAGE_OFFEST+0x9f000)  /*内核栈顶地址,底下一个页框是内核PCB地址0xc009e000*/
-#define PAGE_DIR_TABLE  0x10000      /*内核页表地址,物理内存1MB处*/
+#define PAGE_DIR_TABLE  0x100000      /*内核页表地址,物理内存1MB处*/
 #define MEM_BITMAP_BASE 0xc007e000      /*位图地址,kernel PCB位于0xc009e000处，预留32个页框，最大支持4GB内存*/
 #define KERNEL_VM_BITMAP_BASE 0xc0075000    /*内核虚拟地址池最大1GB，需要8个页框的位图*/
 
@@ -160,7 +160,7 @@ void page_table_init(uint32_t kernel_pages)
         page_dir_addr[i] = 0x0;
     }
 
-    uint32_t page_table_base = page_dir_addr + 0x1000;  /*内核页表基址，页目录表的下一个页框*/
+    uint32_t page_table_base = (uint32_t)page_dir_addr + 0x1000;  /*内核页表基址，页目录表的下一个页框*/
     for (i = 768; i < 768 + page_dir_num; i++) /*映射内核空间*/
     {
         /*每一个页目录项*/
@@ -169,21 +169,23 @@ void page_table_init(uint32_t kernel_pages)
     }
 
     /*初始化页表*/
-    /*每次迭代的内存地址*/
-    uint32_t memory_addr = i * ONE_PAGE_DIR;
+    /*每次迭代的物理内存地址*/
+    uint32_t memory_addr;
     for (i = 0; i < page_dir_num; i++)
     {
+        memory_addr = i * ONE_PAGE_DIR;
         /*每次迭代的页表地址*/
-        uint32_t *page_table_addr = page_dir_addr + 0x1000 + 0x1000 * i;
+        uint32_t *page_table_addr = (uint32_t*)(page_dir_addr + 0x1000 + 0x1000 * i);
         int j;
         for (j = 0; j < 1024; j++)
         {
             /*构造页表项*/
+            //从物理地址0x0开始
             uint32_t each_page_table = (memory_addr + j * PAGE_SIZE) + kernel_page_mark;
             page_table_addr[j] = each_page_table;
         }
     }
-    /**********************************************下面有问题
+    /**********************************************下面有问题*/
     /*对不是整数的页目录项单独赋值*/
     if(last_page_table_num)
     {
@@ -195,10 +197,11 @@ void page_table_init(uint32_t kernel_pages)
     }
     page_dir_addr[page_dir_num] = (page_table_base = (page_dir_num + 1) * 0x1000) + kernel_page_mark;
     /*让最后一个页目录项指向页目录表的基址*/
-    page_dir_addr[1023] = page_dir_addr + kernel_page_mark;
-
+    page_dir_addr[1023] = (uint32_t)page_dir_addr + kernel_page_mark;
+    /**************************************************/
+    put_str("check point 1\n");
     /*重新加载页目录表*/
-    asm volatile("movl %0, %%cr3": :"r"(page_dir_addr));
+    //asm volatile("movl %0, %%cr3": :"r"(page_dir_addr));
 }
 
 void mem_init()
@@ -208,6 +211,6 @@ void mem_init()
     mem_pool_init((uint64_t)0xc0000000);
     /*初始化页表*/
     uint32_t kernel_pages = get_kernel_pages((uint64_t)0xc0000000);
-    page_table_init(kernel_pages);
+    //page_table_init(kernel_pages);
     put_str("memory initialization completion\n");
 }

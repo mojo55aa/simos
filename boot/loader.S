@@ -266,7 +266,7 @@ setup_page:
    mov [PAGE_DIR_TABLE_POS + 4092], eax	     ; 使最后一个目录项指向页目录表自己的地址
 
 ;下面创建页表项(PTE)
-   mov ecx, 256				     ; 1M低端内存 / 每页大小4k = 256
+   mov ecx, 1024				     ; 4M低端内存 / 每页大小4k = 1024
    mov esi, 0
    mov edx, PG_US_U | PG_RW_W | PG_P	     ; 属性为7,US=1,RW=1,P=1
 .create_pte:				     ; 创建Page Table Entry
