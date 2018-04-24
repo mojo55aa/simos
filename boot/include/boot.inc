@@ -12,7 +12,7 @@ KERNEL_STACK_TOP equ 0x9f000+PAGE_OFFEST    ;内核栈地址
 PAGE_OFFEST equ 0xc0000000      ;内核页偏移
 
 ;-------------   页表配置   ----------------
-PAGE_DIR_TABLE_POS equ 0x100000     ;内核页表存放1MB处
+PAGE_DIR_TABLE_POS equ 0x1000000     ;内核页表存放1MB处
 
 ;--------------   gdt描述符属性  -----------
 DESC_G_4K   equ	  1_00000000000000000000000b   
