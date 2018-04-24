@@ -42,8 +42,11 @@ static void ignore_intr_handler(uint8_t ver_n)
 	{
 		return;
 	}
-	put_str(trap_name[ver_n]);
 	put_char('\n');
+	put_str(trap_name[ver_n]);
+
+	while(1)
+		;
 }
 
 //注册通用中断服务程序

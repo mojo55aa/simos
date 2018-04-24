@@ -6,7 +6,7 @@ LD_FLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o $(BUILD_DIR)/init.o \
 		$(BUILD_DIR)/interrupt.o $(BUILD_DIR)/interrupt_s.o \
 		$(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o \
-		$(BUILD_DIR)/keyboard.o
+		$(BUILD_DIR)/keyboard.o $(BUILD_DIR)/memory.o
 
 ##################	NASM编译	################
 $(BUILD_DIR)/mbr.bin : boot/mbr.S
@@ -37,6 +37,9 @@ $(BUILD_DIR)/bitmap.o : lib/kernel/bitmap.c include/os/stdint.h include/os/debug
 	gcc $(C_FLAGS) $< -o $@
 $(BUILD_DIR)/keyboard.o : device/keyboard.c include/os/keyboard.h include/os/stdint.h \
 			include/os/interrupt.h include/os/debug.h include/asm/print.h include/asm/io.h
+	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/memory.o : mm/memory.c include/os/memory.h include/os/bitmap.h include/os/stdint.h \
+			include/asm/print.h
 	gcc $(C_FLAGS) $< -o $@
 
 ################	链接所有目标文件	################
