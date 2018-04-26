@@ -22,6 +22,16 @@ struct virtual_mem_pool{
 #define PG_US_S         0   /*User/Supervisor 普通用户、超级用户，0表示超级用户，特权级3程序不能访问*/
 #define PG_US_U         4   /*普通用户，任意级别可以访问*/
 
+enum pool_flags
+{
+    PF_KERNEL = 1,
+    PF_USER = 2
+};
+
+//内存初始化
 void mem_init();
+
+//申请pg_cnt页内存
+void *page_alloc(uint32_t pg_cnt);
 
 #endif

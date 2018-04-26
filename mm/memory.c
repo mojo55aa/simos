@@ -1,5 +1,6 @@
 /* ISSUES
  * 内存分配起始地址不是自然页
+ * 创建页表过程可能还有问题，第一个页表第一项应该是0x0007   :::resolved
 */
 #include "../include/os/memory.h"
 #include "../include/os/bitmap.h"
@@ -42,6 +43,9 @@ struct physical_mem_pool{
 struct physical_mem_pool kernel_pool, user_pool;    /*kernel,user process物理地址池*/
 struct virtual_mem_pool kernel_vm_pool;         /*KERNEL虚拟地址池*/
 
+
+static void *get_vaddr(enum pool_flags pf, uint32_t pg_cnt);
+static void page_table_init(uint32_t kernel_pages);
 
 /**
  * mem_pool_init -内存池初始化
@@ -111,6 +115,19 @@ void mem_pool_init(uint64_t total_mem)
 }
 
 /**
+ * page_alloc --申请连续的n页内存，成功返回起始虚拟地址
+ * 失败返回NULL
+ * @pg_cnt: 申请的页数
+ * return: void* or NULL
+*/
+void* page_alloc(uint32_t pg_cnt)
+{
+    /*在这里判断什么内存池*/
+
+    return get_vaddr(PF_KERNEL, pg_cnt);
+}
+
+/**
  * get_kernel_pages 返回内核空间页数
  * @total_mem: 总内存数
  * return: 内核页表数
@@ -138,7 +155,7 @@ static inline uint32_t get_kernel_pages(uint64_t total_mem)
  * 最后一个页表指向页目录表，这样kernel最高4MB没有映射
  * @kernel_pages: 内核页数
 */
-void page_table_init(uint32_t kernel_pages)
+static void page_table_init(uint32_t kernel_pages)
 {
     /*页目录表的地址*/
     uint32_t *page_dir_addr = (uint32_t *)PAGE_DIR_TABLE;
@@ -160,7 +177,7 @@ void page_table_init(uint32_t kernel_pages)
     uint16_t kernel_page_mark = 0x0 | PG_P_ENABLE | PG_RW_W | PG_US_U; /*kernel页表属性，存在 可写 普通用户*/
     uint32_t i;
 
-    memset((void*)PAGE_DIR_TABLE, 0, 1024 * 1024);   /*页表占用的空间清零*/
+    memset((void*)(uint32_t)PAGE_DIR_TABLE, 0, 1024 * 1024);   /*页表占用的空间清零*/
     // for (i = 0; i < 768; i++) /*前768项，3GB空间不映射*/
     // {
     //     page_dir_addr[i] = 0x0;
@@ -174,9 +191,10 @@ void page_table_init(uint32_t kernel_pages)
         page_dir_addr[i] = each_page_dir;
     }
 
+
     /*初始化页表*/
     /*每次迭代的物理内存地址*/
-    uint32_t memory_addr;
+    uint32_t memory_addr = 0;
     for (i = 0; i < page_dir_num; i++)
     {
         memory_addr = i * ONE_PAGE_DIR_SIZE;
@@ -189,7 +207,7 @@ void page_table_init(uint32_t kernel_pages)
             //从物理地址0x0开始
             uint32_t each_page_table = (memory_addr + j * PAGE_SIZE) + kernel_page_mark;
             page_table_addr[j] = each_page_table;
-        }    
+        }
     }
 
     /*对不是整数的页目录项单独赋值*/
@@ -211,6 +229,53 @@ void page_table_init(uint32_t kernel_pages)
     asm volatile("movl %0, %%cr3": :"r"(page_dir_addr));
 }
 
+/**
+ * get_vaddr --在pf表示的地址池中申请pg_cnt个连续页
+ * 成功返回虚拟页的起始地址，失败返回NULL
+ * @pf: 地址池类型
+ * @pg_cnt: 申请的页数量
+*/
+static void* get_vaddr(enum pool_flags pf,uint32_t pg_cnt)
+{
+    ASSERT(pf == PF_KERNEL || pf == PF_USER);
+    int32_t vaddr_start = 0;
+    int32_t bit_idx_start = -1;
+    if (pf == PF_KERNEL)
+    {
+        bit_idx_start = bitmap_apply(&kernel_vm_pool.vm_bitmap, pg_cnt);
+        put_hex(bit_idx_start);
+        if (bit_idx_start == -1)
+            return NULL;
+        /*将位图对应位置位*/
+        uint32_t i = 0;
+        while(i < pg_cnt)
+        {
+            bitmap_set_bit(&kernel_vm_pool.vm_bitmap, bit_idx_start + i++, bit_set);
+        }
+        vaddr_start = kernel_vm_pool.vm_start + bit_idx_start * PAGE_SIZE;
+    }
+    else    /*用户内存池，以后实现*/
+    {}
+    return (void *)vaddr_start;
+}
+
+
+/**
+ * palloc --在phy_pool指向的物理内存池中分配一个页面
+ * @phy_pool: 物理内存池
+ * return: 成功返回页框的物理地址，失败返回NULL
+*/
+static void* palloc(struct physical_mem_pool* phy_pool)
+{
+    ASSERT(phy_pool != NULL);
+    int32_t bit_idx = bitmap_apply(&phy_pool->pool_bitmap.bitmap, 1);
+    if(bit_idx == -1)
+        return NULL;
+    bitmap_set_bit(&phy_pool->pool_bitmap.bitmap, bit_idx, bit_set);
+    uint32_t page_phyaddr = bit_idx * PAGE_SIZE + phy_pool->phy_addr_start;
+    return (void*)page_phyaddr;
+}
+
 void mem_init()
 {
     put_str("memory initialization start\n");
@@ -221,4 +286,21 @@ void mem_init()
     page_table_init(kernel_pages);
     put_str("    kernel PDE and PTE reload completion\n");
     put_str("memory initialization completion\n");
+
+    /*测试部分*/
+    put_str("\nbitmap: 0x");
+    put_hex((uint32_t)*(kernel_vm_pool.vm_bitmap.bitmap));
+    put_char('\n');
+
+    put_hex((uint32_t)page_alloc(1));
+
+    put_str("\nbitmap: 0x");
+    put_hex((uint32_t)*(kernel_vm_pool.vm_bitmap.bitmap));
+    put_char('\n');
+
+    put_hex((uint32_t)page_alloc(4));
+
+    put_str("\nbitmap: 0x");
+    put_hex((uint32_t)*(kernel_vm_pool.vm_bitmap.bitmap));
+    put_char('\n');
 }

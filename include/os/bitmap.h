@@ -30,7 +30,7 @@ void bitmap_zero(struct bitmap *bitmap);
 /*判断任意位是否为1*/
 bool bitmap_test_bit(struct bitmap *bitmap,uint32_t bit_idx);
 /*在位图中连续申请n个可用位*/
-int64_t bitmap_applyt(struct bitmap *bitmap, uint32_t nbits);
+int64_t bitmap_apply(struct bitmap *bitmap, uint32_t nbits);
 /*将位图中位置value*/
 void bitmap_set_bit(struct bitmap *bitmap, uint32_t bit_idx, enum bit_status);
 
