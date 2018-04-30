@@ -10,6 +10,7 @@ struct virtual_mem_pool{
 };
 
 #define PAGE_OFFEST 0xc0000000  /*内核线性地址从3GB开始*/
+#define PAGE_SIZE   4096        /*页大小4KB*/
 
 #define __pa(v_addr) ((v_addr) - (PAGE_OFFEST))   /*将3GB以上内核虚拟地址转换成1GB一下物理地址*/
 #define __va(p_addr) ((p_addr) + (PAGE_OFFEST))   /*将内核物理地址转换成虚拟地址*/
@@ -22,10 +23,11 @@ struct virtual_mem_pool{
 #define PG_US_S         0   /*User/Supervisor 普通用户、超级用户，0表示超级用户，特权级3程序不能访问*/
 #define PG_US_U         4   /*普通用户，任意级别可以访问*/
 
+/*内存池标记*/
 enum pool_flags
 {
-    PF_KERNEL = 1,
-    PF_USER = 2
+    PF_KERNEL = 1,  /*内核内存池*/
+    PF_USER = 2     /*用户内存池*/
 };
 
 //内存初始化
@@ -33,5 +35,8 @@ void mem_init();
 
 //申请pg_cnt页内存
 void *page_alloc(uint32_t pg_cnt);
+
+/*在内核堆空间申请页面*/
+void *get_kernel_pages(uint32_t pages);
 
 #endif

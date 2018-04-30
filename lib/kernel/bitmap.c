@@ -103,6 +103,22 @@ int64_t bitmap_apply(struct bitmap* bitmap, uint32_t nbits)
 }
 
 /**
+ * bitmap_set_bits --在位图中设置连续的n位
+ * @bitmap: 位图
+ * @bit_idx: 起始bit偏移
+ * @nbits: 设置的位数
+ * @bit_status: 设置的bit状态
+*/
+void bitmap_set_bits(struct bitmap *bitmap, uint32_t bit_idx, uint32_t nbits, enum bit_status bit)
+{
+    int i = bit_idx;
+    for (; i < bit_idx + nbits; i++)
+    {
+        bitmap_set_bit(bitmap, bit_idx, bit);
+    }
+}
+
+/**
  * find_next_zero_bit --找到下一个可用位
  * @bitmap: 位图
  * @offest: 起始bit偏移,包括offest本身

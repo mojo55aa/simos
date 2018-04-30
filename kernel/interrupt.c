@@ -42,6 +42,14 @@ static void ignore_intr_handler(uint8_t ver_n)
 	{
 		return;
 	}
+	if(ver_n == 14)
+	{
+		put_str("\naddr: 0x");
+		uint32_t address = 0;
+		asm volatile("movl %%cr2,%0"
+					 : "=r"(address));
+		put_hex(address);
+	}
 	put_char('\n');
 	put_str(trap_name[ver_n]);
 
@@ -74,7 +82,7 @@ static void trap_init()
    	trap_name[11] = "#NP Segment Not Present";				//段不存在					故障		 Y
    	trap_name[12] = "#SS Stack Fault Exception";			//堆栈异常					故障		 Y
    	trap_name[13] = "#GP General Protection Exception";		//一般保护异常				 故障		  Y
-   	trap_name[14] = "#PF Page-Fault Exception";				//页异常					故障		 Y
+   	trap_name[14] = "#PF Page-Fault Exception";				//缺页异常					故障		 Y
    	//第15项是intel保留项，未使用																		N
    	trap_name[16] = "#MF x87 FPU Floating-Point Error";		//浮点处理器错误			  故障		   N
    	trap_name[17] = "#AC Alignment Check Exception";		//对齐检查					故障		  Y

@@ -33,5 +33,7 @@ bool bitmap_test_bit(struct bitmap *bitmap,uint32_t bit_idx);
 int64_t bitmap_apply(struct bitmap *bitmap, uint32_t nbits);
 /*将位图中位置value*/
 void bitmap_set_bit(struct bitmap *bitmap, uint32_t bit_idx, enum bit_status);
+/*在位图中设置连续的n位*/
+void bitmap_set_bits(struct bitmap *bitmap, uint32_t bit_idx, uint32_t nbits, enum bit_status bit);
 
 #endif

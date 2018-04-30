@@ -7,6 +7,9 @@
 #include "init.h"
 #include "interrupt.h"
 #include "debug.h"
+#include "thread.h"
+
+void func(void *);
 
 int main(void) {
 	put_str("total memory: 0x");
@@ -16,8 +19,18 @@ int main(void) {
 	init_os();
 	local_irq_enable();
 	//测试缺页异常
-	//*(uint32_t *)(0xc1000000) = 0;
+	// uint32_t x = *(uint32_t *)(0x15000);
+
+	thread_init("first thread", 10, func, "argA ");
+	BREAK_POINT(7);
 	while (1)
 		;
 	return 0;
+}
+
+void func(void* argc)
+{
+	BREAK_POINT(6);
+	char *param = argc;
+	put_str(param);
 }
