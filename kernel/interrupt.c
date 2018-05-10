@@ -44,7 +44,7 @@ static void ignore_intr_handler(uint8_t ver_n)
 	}
 	if(ver_n == 14)
 	{
-		put_str("\naddr: 0x");
+		put_str("\nPage Fault CR2: 0x");
 		uint32_t address = 0;
 		asm volatile("movl %%cr2,%0"
 					 : "=r"(address));

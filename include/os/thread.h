@@ -1,6 +1,7 @@
 #ifndef __THREAD_THREAD_H
 #define __THREAD_THREAD_H
 #include "stdint.h"
+#include "list.h"
 
 typedef void thread_func(void *);
 
@@ -57,11 +58,16 @@ struct thread_stack{
 
 /*PCB*/
 struct task_struct{
-    uint32_t *self_kernel_stack;    /*进程内核堆栈*/
-    enum task_status status;        /*进程状态*/
-    uint16_t priority;              /*优先级*/
-    char name[32];                  /*进程名字*/
-    uint32_t stack_boundary; /*栈边界，用于检查栈溢出*/
+    uint32_t *self_kernel_stack;                /*进程内核堆栈*/
+    enum task_status status;                    /*进程状态*/
+    uint16_t priority;                          /*优先级*/
+    uint8_t ticks;                              /*时钟滴答数*/
+    uint32_t elapsed_ticks;                     /*自任务上CPU开始一共的滴答数*/
+    char name[32];                              /*进程名字*/
+    struct kernel_list thread_dispatch_queue;    /*进程调度队列*/
+    struct kernel_list thread_list;             /*进程链表,包括所有进程*/
+    uint32_t *pde_addr;                         /*进程页表虚拟地址*/
+    uint32_t stack_boundary;                    /*栈边界，用于检查栈溢出*/
 };
 
 
