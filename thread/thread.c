@@ -130,3 +130,15 @@ struct task_struct* thread_init(char* name, int prio, thread_func function, void
     BREAK_POINT(5);
     return thread;
 }
+
+static void init_main_thread()
+{
+    /*main进程已经在loader.s中把esp移动到0x9f000
+    *PCB地址是0x9e000
+    */
+    main_thread = get_cur_pcb();
+    pcb_init(main_thread, "main", 31);
+    /*将main主进程加入到进程链表中*/
+    ASSERT(!list_find_item(&thread_total_list, &main_thread->thread_list));
+    list_add(&thread_total_list, &main_thread->thread_list);
+}

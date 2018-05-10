@@ -73,6 +73,6 @@ struct task_struct{
 
 /*开始一个线程*/
 struct task_struct *thread_init(char *name, int prio, thread_func function, void *func_argc);
-
+struct task_struct *get_cur_pcb();
 
 #endif
