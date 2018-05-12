@@ -1,8 +1,8 @@
 #include "list.h"
 #include "stdint.h"
-#include "interrupt.h"
 #include "global.h"
-
+#include "debug.h"
+#include "print.h"
 
 
 /**
@@ -101,14 +101,92 @@ uint32_t list_len(struct kernel_list* node)
 */
 bool list_find_item(struct kernel_list* list, struct kernel_list* node)
 {
+    if(list == NULL || node == NULL)
+    {
+        return FALSE;
+    }
     struct kernel_list *p = list;
-    while (p->next != p)
+    while (p->next != list)
     {
         if(p == node)
         {
             return TRUE;
         }
+        PRINT_ADDR("item", p);
         p = p->next;
     }
     return FALSE;
+}
+
+/**
+ * queue_empty --队列是否为空
+ * @queue: 队列
+*/
+bool queue_empty(struct general_queue* queue)
+{
+    ASSERT(queue != NULL);
+    return (queue->queue_len == 0 ? TRUE : FALSE);
+}
+
+/**
+ * queue_in --入队
+ * @queue: 操作的队列
+ * @ node: 入队的节点
+*/
+void queue_in(struct general_queue* queue, struct kernel_list* node)
+{
+    ASSERT(queue != NULL && node != NULL);
+    // PRINT_ADDR("queue_front", queue->front);
+    /*如果队列是空的，front直接指向node*/
+    if(queue->queue_len == 0)
+    {
+        queue->front = node;
+        queue->queue_len++;
+    }
+    else
+    {
+        list_add_prev(queue->front, node);
+        queue->queue_len++;
+    }
+    // PRINT_ADDR("queue_front after add", queue->front);
+}
+
+/**
+ * queue_out --出队
+ * @queue: 操作的队列
+ * return: 成功返回出队的元素指针，失败返回NULL
+*/
+struct kernel_list* queue_out(struct general_queue* queue)
+{
+    ASSERT(queue != NULL);
+    /*队列为空，出队失败*/
+    if(queue->queue_len == 0)
+    {
+        return NULL;
+    }
+
+    /*如果队列还剩一个元素,出队后front指向NULL，否则指向下一个*/
+    struct kernel_list *p = queue->front;
+    if (queue->queue_len == 1)
+    {
+        queue->front = NULL;
+    }
+    else
+    {
+        queue->front = queue->front->next;
+    }
+
+    /*在队列中使第一个元素脱离*/
+    list_del(p);
+    queue->queue_len--;
+    return p;
+}
+
+/**
+ * queue_init --初始化一个空队列
+*/
+void queue_init(struct general_queue* queue)
+{
+    queue->front = NULL;
+    queue->queue_len = 0;
 }

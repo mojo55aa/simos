@@ -6,7 +6,9 @@ LD_FLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o $(BUILD_DIR)/init.o \
 		$(BUILD_DIR)/interrupt.o $(BUILD_DIR)/interrupt_s.o \
 		$(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o \
-		$(BUILD_DIR)/keyboard.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o
+		$(BUILD_DIR)/keyboard.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o \
+		$(BUILD_DIR)/timer.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/switch.o \
+		$(BUILD_DIR)/list.o
 
 ##################	NASM编译	################
 $(BUILD_DIR)/mbr.bin : boot/mbr.S
@@ -17,6 +19,8 @@ $(BUILD_DIR)/print.o : lib/kernel/print.S
 	nasm -f elf lib/kernel/print.S -o $@
 $(BUILD_DIR)/interrupt_s.o : kernel/interrupt_s.S
 	nasm -f elf kernel/interrupt_s.S -o $@
+$(BUILD_DIR)/switch.o : thread/switch.S
+	nasm -f elf $< -o $@
 
 
 #################	GCC编译	##################
@@ -41,9 +45,16 @@ $(BUILD_DIR)/keyboard.o : device/keyboard.c include/os/keyboard.h include/os/std
 $(BUILD_DIR)/memory.o : mm/memory.c include/os/memory.h include/os/bitmap.h include/os/stdint.h \
 			include/asm/print.h
 	gcc $(C_FLAGS) $< -o $@
-$(BUILD_DIR)/thread.o : thread/thread.c include/os/thread.h include/os/stdint.h include/os/memory.h \
-			include/os/string.h include/os/debug.h
+$(BUILD_DIR)/list.o : lib/kernel/list.c include/os/global.h include/os/stdint.h \
+			include/os/debug.h
 	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/timer.o : device/timer.c include/os/timer.h include/os/interrupt.h include/os/thread.h \
+			include/os/debug.h include/asm/print.h
+	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/thread.o : thread/thread.c include/os/thread.h include/os/debug.h include/os/memory.h \
+			include/os/string.h include/os/interrupt.h include/asm/print.h
+	gcc $(C_FLAGS) $< -o $@
+
 
 ################	链接所有目标文件	################
 $(BUILD_DIR)/kernel.bin : $(OBJS)

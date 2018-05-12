@@ -23,6 +23,8 @@ struct general_queue{
  * type_addr = list_entry(ptr, type, member)
 */
 
+
+//链表操作
 void list_init(struct kernel_list *list);
 void list_add(struct kernel_list *head, struct kernel_list *new);
 void list_add_prev(struct kernel_list *head, struct kernel_list *new);
@@ -31,5 +33,10 @@ void list_del_safe(struct kernel_list *node);
 uint32_t list_len(struct kernel_list *node);
 bool list_find_item(struct kernel_list *list, struct kernel_list *node);
 
+//队列操作
+void queue_in(struct general_queue *queue, struct kernel_list *node);
+struct kernel_list *queue_out(struct general_queue *queue);
+bool queue_empty(struct general_queue *queue);
+void queue_init(struct general_queue *queue);
 
 #endif

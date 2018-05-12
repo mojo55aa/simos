@@ -9,7 +9,8 @@
 #include "debug.h"
 #include "thread.h"
 
-void func(void *);
+void thread_a(void *);
+void thread_b(void *);
 
 int main(void) {
 	put_str("total memory: 0x");
@@ -17,20 +18,30 @@ int main(void) {
 	put_hex(total_mem);
 	put_char('\n');
 	init_os();
-	local_irq_enable();
 	//测试缺页异常
 	// uint32_t x = *(uint32_t *)(0x15000);
-
-	thread_init("first thread", 10, func, "argA ");
-	BREAK_POINT(7);
+	// BREAK_POINT(6);
+	thread_start("thread A", 31, thread_a, "argA ");
+	// BREAK_POINT(5);
+	thread_start("thread B", 8, thread_b, "argB ");
+	local_irq_enable();
 	while (1)
-		;
+		put_str("MAIN ");
 	return 0;
 }
 
-void func(void* argc)
+void thread_a(void* argc)
 {
-	BREAK_POINT(6);
-	char *param = argc;
+	char* param = argc;
 	put_str(param);
+	while(1)
+		;
+}
+
+void thread_b(void* argc)
+{
+	char* param = argc;
+	put_str(param);
+	while(1)
+		;
 }

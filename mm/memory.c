@@ -263,7 +263,9 @@ static void* get_vaddr(enum pool_flags pf,uint32_t pg_cnt)
         vaddr_start = kernel_vm_pool.vm_start + bit_idx_start * PAGE_SIZE;
     }
     else    /*用户内存池，以后实现*/
-    {}
+    {
+        //TODO
+    }
     return (void *)vaddr_start;
 }
 

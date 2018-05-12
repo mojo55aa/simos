@@ -13,7 +13,7 @@ void debug_out(const char* filename, \
     put_str((char*)filename);
     put_str("\n");
     put_str("line: ");
-    put_str((char*)line);
+    put_hex(line);
     put_str("\n");
     put_str("function: ");
     put_str((char*)func);

@@ -3,6 +3,8 @@
 #include "interrupt.h"
 #include "keyboard.h"
 #include "memory.h"
+#include "timer.h"
+#include "thread.h"
 
 void init_os(void)
 {
@@ -10,4 +12,6 @@ void init_os(void)
     interrupt_init();
     keyboard_init();
     mem_init();
+    timer_init();   /*为进程注册时钟中断处理程序*/
+    thread_init();
 }
