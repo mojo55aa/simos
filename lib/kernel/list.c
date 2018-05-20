@@ -3,6 +3,7 @@
 #include "global.h"
 #include "debug.h"
 #include "print.h"
+#include "thread.h"
 
 
 /**
@@ -112,10 +113,29 @@ bool list_find_item(struct kernel_list* list, struct kernel_list* node)
         {
             return TRUE;
         }
-        PRINT_ADDR("item", p);
+        // PRINT_ADDR("item", p);
         p = p->next;
     }
     return FALSE;
+}
+
+/**
+ * list_for_each --遍历链表
+ * @list: 遍历起始位置
+*/
+void list_for_each(struct kernel_list* list)
+{
+    if(list == NULL)
+    {
+        return;
+    }
+    struct kernel_list *p = list;
+    do
+    {
+        struct task_struct *task = list_entry(p, struct task_struct, thread_dispatch_queue);
+        PRINT_ADDR(task->name, task);
+        p = p->next;
+    } while (p->next != list);
 }
 
 /**
@@ -141,6 +161,8 @@ void queue_in(struct general_queue* queue, struct kernel_list* node)
     if(queue->queue_len == 0)
     {
         queue->front = node;
+        node->next = node;
+        node->prev = node;
         queue->queue_len++;
     }
     else
@@ -180,6 +202,30 @@ struct kernel_list* queue_out(struct general_queue* queue)
     list_del(p);
     queue->queue_len--;
     return p;
+}
+
+/**
+ * queue_push --将元素放到队列首
+ * @queue: 操作的队列
+ * @node: 放入的元素
+*/
+void queue_push(struct general_queue* queue, struct kernel_list* node)
+{
+    ASSERT(queue != NULL && node != NULL);
+    /*如果队列是空的，front直接指向node*/
+    if(queue->queue_len == 0)
+    {
+        queue->front = node;
+        node->next = node;
+        node->prev = node;
+        queue->queue_len++;
+    }
+    else
+    {
+        list_add_prev(queue->front, node);
+        queue->front = node;
+        queue->queue_len++;
+    }
 }
 
 /**

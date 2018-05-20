@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "timer.h"
 #include "thread.h"
+#include "console.h"
 
 void init_os(void)
 {
@@ -14,4 +15,5 @@ void init_os(void)
     mem_init();
     timer_init();   /*为进程注册时钟中断处理程序*/
     thread_init();
+    console_init();
 }

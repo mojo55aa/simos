@@ -166,20 +166,24 @@ void interrupt_init(void)
 	}while(0)
 
 /*开中断*/
-void local_irq_enable(void)
+enum intr_status local_irq_enable(void)
 {
-	if(INTR_OFF == get_intr_status())
+	enum intr_status old_status = get_intr_status();
+	if(INTR_OFF == old_status)
 	{
 		asm volatile("sti":::"memory");
 	}
+	return old_status;
 }
 /*关中断*/
-void local_irq_disable(void)
+enum intr_status local_irq_disable(void)
 {
-	if(INTR_ON == get_intr_status())
+	enum intr_status old_status = get_intr_status();
+	if(INTR_ON == old_status)
 	{
 		asm volatile("cli":::"memory");
 	}
+	return old_status;
 }
 /*设置中断状态*/
 void set_intr_status(enum intr_status status)

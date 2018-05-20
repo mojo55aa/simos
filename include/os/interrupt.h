@@ -56,8 +56,8 @@ enum intr_status{       //interrupts on or off
 
 enum intr_status get_intr_status(void);
 void set_intr_status(enum intr_status);
-void local_irq_enable(void);
-void local_irq_disable(void);
+enum intr_status local_irq_enable(void);
+enum intr_status local_irq_disable(void);
 
 
 

@@ -7,6 +7,7 @@
 #include "../include/os/string.h"
 #include "../include/os/interrupt.h"
 #include "../include/asm/print.h"
+#include "../include/os/console.h"
 
 
 #define PCB_SIZE (PAGE_SIZE * 1)
@@ -16,7 +17,7 @@
 struct task_struct *main_thread;        /*主线程PCB*/
 struct general_queue thread_ready_queue;  /*就绪队列*/
 struct kernel_list thread_total_list;   /*全部进程链表*/
-
+struct task_struct *current_task;       /*当前任务PCB*/
 
 /*汇编进程调度函数*/
 extern void switch_to(struct task_struct *current, struct task_struct *next);
@@ -27,13 +28,12 @@ extern void switch_to(struct task_struct *current, struct task_struct *next);
 */
 struct task_struct* get_cur_task()
 {
-    uint32_t esp;
-    asm("mov %%esp, %0"
-                 : "=g"(esp));
-    return (struct task_struct *)(esp & 0xfffff000);
+    // uint32_t esp;
+    // asm("mov %%esp, %0"
+    //              : "=g"(esp));
+    // return (struct task_struct *)(esp & 0xfffff000);
+    return current_task;
 }
-
-
 
 /**
  * 
@@ -110,29 +110,13 @@ struct task_struct* thread_start(char* name, int prio, thread_func function, voi
     pcb_init(thread, name, prio);
     thread_creat(thread, function, func_argc);
 
-    put_str("function:thread_start\n");
-    put_str(thread->name);
-    PRINT_ADDR(" PCB", (uint32_t)thread);
-
-    BREAK_POINT(1);
-        /*加入就绪队列*/
-    // ASSERT(!list_find_item(thread_ready_queue.front, &thread->thread_dispatch_queue));
+    /*加入就绪队列*/
+    ASSERT(!list_find_item(thread_ready_queue.front, &thread->thread_dispatch_queue));
     queue_in(&thread_ready_queue, &thread->thread_dispatch_queue);
     /*加入进程链表*/
-    // ASSERT(!list_find_item(&thread_total_list, &thread->thread_list));
-
+    ASSERT(!list_find_item(&thread_total_list, &thread->thread_list));
     list_add(&thread_total_list, &thread->thread_list);
-    // asm volatile("movl %0, %%esp;\
-    //             pop %%ebp;\
-    //             pop %%ebx;\
-    //             pop %%edi;\
-    //             pop %%esi;\
-    //             ret"
-    //              :
-    //              : "g"(thread->self_kernel_stack)
-    //              : "memory");
-    BREAK_POINT(5);
-    current_task = thread;
+
     return thread;
 }
 
@@ -146,7 +130,7 @@ static void init_main_thread()
     *PCB地址是0x9e000
     */
     main_thread = get_cur_task();
-    pcb_init(main_thread, "main", 31);
+    pcb_init(main_thread, "main", 1);
     /*将main主进程加入到进程链表中*/
     ASSERT(!list_find_item(&thread_total_list, &main_thread->thread_list));
     list_add(&thread_total_list, &main_thread->thread_list);
@@ -159,41 +143,77 @@ static void init_main_thread()
 */
 void schedule()
 {
+    // list_for_each(thread_ready_queue.front);
     local_irq_disable();
     /*schedule被时钟中断服务程序调用，此时CPU应该已经自动关中断*/
     ASSERT(get_intr_status() == INTR_OFF);
-    struct task_struct *cur_task = current_task;
-
-    put_str("function:schedule\n");
-    put_str(cur_task->name);
-    PRINT_ADDR(" PCB", (uint32_t)cur_task);
-    PRINT_ADDR("queue", (uint32_t)&cur_task->thread_dispatch_queue);
-    PRINT_ADDR("point to PCB", list_entry(0xc1000030, struct task_struct, thread_dispatch_queue));
-
+    struct task_struct *cur_task = get_cur_task();
 
     /*因为时间片到被换下*/
     if(cur_task->status == TASK_RUNNING)
     {
         ASSERT(!list_find_item(thread_ready_queue.front, &cur_task->thread_dispatch_queue));
         /*加入到就绪队列队尾*/
-        BREAK_POINT(9);
         queue_in(&thread_ready_queue, &cur_task->thread_dispatch_queue);
-        BREAK_POINT(10);
         /*重置状态*/
         cur_task->ticks = cur_task->priority;
         cur_task->status = TASK_READY;
     }
     else{
         //TODO 因为其他原因被换下，不需要加入就绪队列
+        // put_str("other reason ");
     }
+
     /*从就绪队列中获取一个任务*/
-    BREAK_POINT(8);
     struct kernel_list *_next = queue_out(&thread_ready_queue);
     ASSERT(_next != NULL);
     struct task_struct *next_task = list_entry(_next, struct task_struct, thread_dispatch_queue);
     next_task->status = TASK_RUNNING;
+
     /*执行汇编语言switch_to完成进程切换*/
+    /*即将执行下一个任务，将当前任务更新*/
+    current_task = next_task;
     switch_to(cur_task, next_task);
+}
+
+/**
+* thread_block --线程阻塞函数
+* @set_status: 将线程设置的状态，包括TASK_BLOCKED, TASK_WAITIN, TASK_HANGING
+*/
+void thread_block(enum task_status set_status)
+{
+    ASSERT(set_status == TASK_BLOCKED || set_status == TASK_WAITING ||\
+     set_status == TASK_HANGING);
+    /*保证调度过程不受中断影响*/
+    enum intr_status old_status = local_irq_disable();
+    struct task_struct *cur_task = get_cur_task();
+    cur_task->status = set_status;
+    schedule();     /*换下处理器*/
+    /*线程解除阻塞后，继续运行下面的代码*/
+    set_intr_status(old_status);
+}
+
+/**
+ * thread_unblock --线程唤醒函数
+ * @wake_task: 待唤醒的任务
+*/
+void thread_unblock(struct task_struct* wake_task)
+{
+    enum intr_status old_status = local_irq_disable();
+    enum task_status task_status = wake_task->status;
+    ASSERT(task_status == TASK_BLOCKED || task_status == TASK_WAITING || task_status == TASK_HANGING);
+    if(wake_task->status != TASK_READY)
+    {
+        ASSERT(!list_find_item(thread_ready_queue.front, &wake_task->thread_dispatch_queue));
+        if(list_find_item(thread_ready_queue.front, &wake_task->thread_dispatch_queue))
+        {
+            ASSERT_FAILED("thread unblock failed: thread in ready_queue");
+        }
+        /*放到就绪队列首*/
+        queue_push(&thread_ready_queue, &wake_task->thread_dispatch_queue);
+        wake_task->status = TASK_READY;
+    }
+    set_intr_status(old_status);
 }
 
 void thread_init()
@@ -201,7 +221,7 @@ void thread_init()
     put_str("thread initialization start\n");
     list_init(&thread_total_list);
     queue_init(&thread_ready_queue);
-    current_task = 0xc009e000;
+    current_task = (struct task_struct*)0xc009e000;
     init_main_thread();
     put_str("thread initialization completion\n");
 }

@@ -8,11 +8,12 @@
 #include "interrupt.h"
 #include "debug.h"
 #include "thread.h"
+#include "console.h"
 
-void thread_a(void *);
-void thread_b(void *);
+void thread_f(void *);
 
-int main(void) {
+int main(void)
+{
 	put_str("total memory: 0x");
 	uint32_t total_mem = (*(uint32_t *)(0xb00));
 	put_hex(total_mem);
@@ -21,27 +22,22 @@ int main(void) {
 	//测试缺页异常
 	// uint32_t x = *(uint32_t *)(0x15000);
 	// BREAK_POINT(6);
-	thread_start("thread A", 31, thread_a, "argA ");
+	thread_start("thread A", 2, thread_f, "threadA ");
 	// BREAK_POINT(5);
-	thread_start("thread B", 8, thread_b, "argB ");
+	thread_start("thread B", 1, thread_f, "threadB ");
 	local_irq_enable();
 	while (1)
-		put_str("MAIN ");
+	{
+		console_str("MAIN ");
+	}
 	return 0;
 }
 
-void thread_a(void* argc)
+void thread_f(void *argc)
 {
-	char* param = argc;
-	put_str(param);
-	while(1)
-		;
-}
-
-void thread_b(void* argc)
-{
-	char* param = argc;
-	put_str(param);
-	while(1)
-		;
+	char *param = argc;
+	while (1)
+	{
+		console_str(param);
+	}
 }

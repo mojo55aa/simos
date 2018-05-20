@@ -70,12 +70,13 @@ struct task_struct{
     uint32_t stack_boundary;                    /*栈边界，用于检查栈溢出*/
 };
 
-struct task_struct *current_task;
 
 /*开始一个线程*/
 struct task_struct *thread_start(char *name, int prio, thread_func function, void *func_argc);
 struct task_struct *get_cur_task();
 void thread_init();
 void schedule();
+void thread_block(enum task_status set_status);
+void thread_unblock(struct task_struct *wake_task);
 
 #endif
