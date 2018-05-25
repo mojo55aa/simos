@@ -137,7 +137,7 @@ static void pic_8259A_init(void)
 	outb(PIC_S_DATA, 0x01);
 
 	//打开主片IR0，目前只接受时钟中断
-	outb(PIC_M_DATA, 0xfe);	//键盘中断
+	outb(PIC_M_DATA, 0xfc);	//键盘中断fd，时钟中断fe
 	outb(PIC_S_DATA, 0xff);
 
 	put_str("    PIC initialization completion\n");

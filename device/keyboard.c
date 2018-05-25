@@ -9,8 +9,10 @@
 #include "interrupt.h"
 #include "stdint.h"
 #include "global.h"
+#include "ioqueue.h"
 
 static void key_output(uint8_t key_code, int8_t key_status);
+struct ioqueue kbd_buff;    /*键盘缓冲区*/
 
 /*屏幕输出部分*/
 
@@ -235,14 +237,20 @@ static void key_output(uint8_t key_code, int8_t key_status)
     /*获取shift与caps_lock按键状态*/
     uint8_t __shift = GET_BIT(key_status, 0) | GET_BIT(key_status, 3);
     uint8_t __caps_lock = GET_BIT(key_status, 6);
-    
+    char cur_key = 0;
+
     if(__caps_lock)     /*caps_lock处于激活状态*/
     {
-        __shift ? put_char(keymap[key_code][0]) : put_char(keymap[key_code][1]);
+        __shift ? (cur_key = keymap[key_code][0]) : (cur_key = keymap[key_code][1]);
     }
     else
     {
-        __shift ? put_char(keymap[key_code][1]) : put_char(keymap[key_code][0]);
+        __shift ? (cur_key = keymap[key_code][1]) : (cur_key = keymap[key_code][0]);
+    }
+    if(!ioq_full(&kbd_buff))
+    {
+        put_char(cur_key);
+        ioq_putchar(&kbd_buff, cur_key);
     }
 }
 

@@ -34,9 +34,12 @@ enum pool_flags
 void mem_init();
 
 //申请pg_cnt页内存
-void *page_alloc(uint32_t pg_cnt);
+void *page_alloc(enum pool_flags pf, uint32_t pg_cnt);
 
 /*在内核堆空间申请页面*/
 void *get_kernel_pages(uint32_t pages);
+
+/*为用户进程申请物理页，返回页表映射的虚拟地址*/
+void *get_user_pages(uint32_t pages);
 
 #endif

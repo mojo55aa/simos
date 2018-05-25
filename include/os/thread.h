@@ -2,6 +2,7 @@
 #define __THREAD_THREAD_H
 #include "stdint.h"
 #include "list.h"
+#include "memory.h"
 
 typedef void thread_func(void *);
 
@@ -67,7 +68,8 @@ struct task_struct{
     struct kernel_list thread_dispatch_queue;    /*进程调度队列*/
     struct kernel_list thread_list;             /*进程链表,包括所有进程*/
     uint32_t *pde_addr;                         /*进程页表虚拟地址*/
-    uint32_t stack_boundary;                    /*栈边界，用于检查栈溢出*/
+    struct virtual_mem_pool userprog_vaddr;     /*进程虚拟地址池*/
+    uint32_t stack_boundary; /*栈边界，用于检查栈溢出*/
 };
 
 

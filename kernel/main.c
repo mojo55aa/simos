@@ -9,6 +9,8 @@
 #include "debug.h"
 #include "thread.h"
 #include "console.h"
+#include "ioqueue.h"
+#include "keyboard.h"
 
 void thread_f(void *);
 
@@ -22,13 +24,14 @@ int main(void)
 	//测试缺页异常
 	// uint32_t x = *(uint32_t *)(0x15000);
 	// BREAK_POINT(6);
-	thread_start("thread A", 2, thread_f, "threadA ");
+	thread_start("thread A", 2, thread_f, "A_ ");
 	// BREAK_POINT(5);
-	thread_start("thread B", 1, thread_f, "threadB ");
+	thread_start("thread B", 1, thread_f, "B_ ");
 	local_irq_enable();
 	while (1)
 	{
-		console_str("MAIN ");
+		// console_str("MAIN ");
+		;
 	}
 	return 0;
 }
@@ -38,6 +41,13 @@ void thread_f(void *argc)
 	char *param = argc;
 	while (1)
 	{
-		console_str(param);
+		enum intr_status old_ = local_irq_disable();
+		if(!ioq_empty(&kbd_buff))
+		{
+			console_str(param);
+			char ch = ioq_getchar(&kbd_buff);
+			console_char(ch);
+		}
+		set_intr_status(old_);
 	}
 }

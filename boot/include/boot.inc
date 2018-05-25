@@ -1,6 +1,6 @@
 ;-------------	 loader和kernel   ----------
 
-LOADER_BASE_ADDR equ 0x900 
+LOADER_BASE_ADDR equ 0x900      ;loader加载到此处，也是GDT起始地址
 LOADER_STACK_TOP equ LOADER_BASE_ADDR
 LOADER_START_SECTOR equ 0x2         ;loader程序扇区号
 

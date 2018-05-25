@@ -8,7 +8,8 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o $(BUILD_DIR)/init.o \
 		$(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o \
 		$(BUILD_DIR)/keyboard.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o \
 		$(BUILD_DIR)/timer.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/switch.o \
-		$(BUILD_DIR)/list.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o
+		$(BUILD_DIR)/list.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o \
+		$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o
 
 ##################	NASM编译	################
 $(BUILD_DIR)/mbr.bin : boot/mbr.S
@@ -59,6 +60,12 @@ $(BUILD_DIR)/sync.o : thread/sync.c include/os/list.h include/os/interrupt.h inc
 	gcc $(C_FLAGS) $< -o $@
 $(BUILD_DIR)/console.o : device/console.c include/os/console.h include/os/stdint.h include/asm/print.h \
 			include/os/sync.h
+	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/ioqueue.o : device/ioqueue.c include/os/ioqueue.h include/os/sync.h include/os/global.h \
+			include/os/interrupt.h include/os/stdint.h
+	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/tss.o : userprog/tss.c include/os/tss.h include/os/global.h include/asm/print.h \
+			include/os/thread.h include/os/memory.h include/os/string.h include/os/stdint.h
 	gcc $(C_FLAGS) $< -o $@
 
 

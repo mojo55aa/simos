@@ -106,6 +106,7 @@ void pcb_init(struct task_struct* pthread, char* name, int prio)
 struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_argc)
 {
     struct task_struct *thread = (struct task_struct*)get_kernel_pages(PCB_SIZE / PAGE_SIZE);
+    put_str("get_kernel_pages pass\n");
 
     pcb_init(thread, name, prio);
     thread_creat(thread, function, func_argc);
@@ -166,6 +167,12 @@ void schedule()
 
     /*从就绪队列中获取一个任务*/
     struct kernel_list *_next = queue_out(&thread_ready_queue);
+
+    if(thread_ready_queue.queue_len == 0)
+    {//TODO 实现idle进程:在就绪队列加入指向idle的指针
+        put_str("CPU IDLE\n");
+        return;
+    }
     ASSERT(_next != NULL);
     struct task_struct *next_task = list_entry(_next, struct task_struct, thread_dispatch_queue);
     next_task->status = TASK_RUNNING;
