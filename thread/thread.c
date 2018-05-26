@@ -8,9 +8,10 @@
 #include "../include/os/interrupt.h"
 #include "../include/asm/print.h"
 #include "../include/os/console.h"
+#include "../include/os/sync.h"
 
 
-#define PCB_SIZE (PAGE_SIZE * 1)
+#define PCB_SIZE (PAGE_SIZE * 1)    /*PCB大小*/
 
 
 /*一些全局变量*/
@@ -18,6 +19,7 @@ struct task_struct *main_thread;        /*主线程PCB*/
 struct general_queue thread_ready_queue;  /*就绪队列*/
 struct kernel_list thread_total_list;   /*全部进程链表*/
 struct task_struct *current_task;       /*当前任务PCB*/
+struct lock pid_lock;       /*分配PID时的锁*/
 
 /*汇编进程调度函数*/
 extern void switch_to(struct task_struct *current, struct task_struct *next);
@@ -36,7 +38,20 @@ struct task_struct* get_cur_task()
 }
 
 /**
- * 
+ * alloc_pid --分配pid
+ * 维护静态变量next_pid,原子操作
+*/
+static pid_t alloc_pid(void)
+{
+    static pid_t next_pid = 0;
+    lock_acquire(&pid_lock);
+    next_pid++;
+    lock_release(&pid_lock);
+    return next_pid;
+}
+
+/**
+ * 任务执行的函数
 */
 static void kernel_func(thread_func* function, void* func_argc)
 {
@@ -77,6 +92,7 @@ void pcb_init(struct task_struct* pthread, char* name, int prio)
 {
     memset(pthread, 0, sizeof(*pthread));
     strcpy(pthread->name, name);
+    pthread->pid = alloc_pid();
     /*主进程设置为运行态，其他进程设置就绪态*/
     if(pthread == main_thread)
     {
@@ -106,7 +122,6 @@ void pcb_init(struct task_struct* pthread, char* name, int prio)
 struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_argc)
 {
     struct task_struct *thread = (struct task_struct*)get_kernel_pages(PCB_SIZE / PAGE_SIZE);
-    put_str("get_kernel_pages pass\n");
 
     pcb_init(thread, name, prio);
     thread_creat(thread, function, func_argc);
@@ -166,13 +181,14 @@ void schedule()
     }
 
     /*从就绪队列中获取一个任务*/
-    struct kernel_list *_next = queue_out(&thread_ready_queue);
-
+    /*获取之前判断队列为空就转入idle执行*/
     if(thread_ready_queue.queue_len == 0)
     {//TODO 实现idle进程:在就绪队列加入指向idle的指针
         put_str("CPU IDLE\n");
         return;
     }
+    struct kernel_list *_next = queue_out(&thread_ready_queue);
+
     ASSERT(_next != NULL);
     struct task_struct *next_task = list_entry(_next, struct task_struct, thread_dispatch_queue);
     next_task->status = TASK_RUNNING;
@@ -228,7 +244,8 @@ void thread_init()
     put_str("thread initialization start\n");
     list_init(&thread_total_list);
     queue_init(&thread_ready_queue);
-    current_task = (struct task_struct*)0xc009e000;
+    lock_init(&pid_lock);
+    current_task = (struct task_struct *)0xc009e000; /*第一个任务指向主进程PCB*/
     init_main_thread();
     put_str("thread initialization completion\n");
 }

@@ -6,6 +6,8 @@
 
 typedef void thread_func(void *);
 
+typedef int16_t pid_t;              /*pid类型*/
+
 /*进程状态*/
 enum task_status
 {
@@ -62,6 +64,7 @@ struct task_struct{
     uint32_t *self_kernel_stack;                /*进程内核堆栈*/
     enum task_status status;                    /*进程状态*/
     uint16_t priority;                          /*优先级*/
+    pid_t pid;                                  /*任务PID*/
     uint8_t ticks;                              /*时钟滴答数*/
     uint32_t elapsed_ticks;                     /*自任务上CPU开始一共的滴答数*/
     char name[32];                              /*进程名字*/

@@ -11,6 +11,7 @@ struct virtual_mem_pool{
 
 #define PAGE_OFFEST 0xc0000000  /*内核线性地址从3GB开始*/
 #define PAGE_SIZE   4096        /*页大小4KB*/
+#define PAGE_DIR_TABLE 0x100000                  /*内核页表地址,物理内存1MB处*/
 
 #define __pa(v_addr) ((v_addr) - (PAGE_OFFEST))   /*将3GB以上内核虚拟地址转换成1GB一下物理地址*/
 #define __va(p_addr) ((p_addr) + (PAGE_OFFEST))   /*将内核物理地址转换成虚拟地址*/

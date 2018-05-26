@@ -16,7 +16,9 @@ step 3. 加载idt
 #define PIC_S_CTRL	0xa0		//从片控制端口
 #define PIC_S_DATA	0xa1		//从片数据端口
 
-#define IDT_DESC_CNT 0x30	//中断数量
+#define IDT_DESC_CNT 0x81	//中断数量
+
+#define SYSCALL_NUMBER	0x80	//系统调用中断号
 
 //中断门描述符结构体
 struct gate_descr{
@@ -34,6 +36,7 @@ static struct gate_descr idt[IDT_DESC_CNT];		//中断描述符表
 intr_handler irqaction_t[IDT_DESC_CNT];	//中断服务程序数组
 extern intr_handler intr_entry_table[IDT_DESC_CNT];	//中断处理函数入口数组
 char* trap_name[IDT_DESC_CNT];		//保存中断名字
+extern uint32_t syscall_handler(void);	//系统调用入口函数，在interrupt_s.S中定义
 
 //通用中断处理程序
 static void ignore_intr_handler(uint8_t ver_n)
@@ -118,6 +121,8 @@ static void idt_init(void)
 	{
 		create_idt_desc(&idt[i], IDT_ATTR_DPL0, intr_entry_table[i]);
 	}
+	/*单独处理系统调用描述符，DPL为3*/
+	create_idt_desc(&idt[SYSCALL_NUMBER], IDT_ATTR_DPL3, syscall_handler);
 	put_str("    idt initialization completion\n");
 }
 

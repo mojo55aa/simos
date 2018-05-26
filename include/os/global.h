@@ -77,6 +77,13 @@ struct gdt_desc{
     uint8_t base_high_8;
 };
 
+/*eflags寄存器属性位*/
+#define EFLAGS_MBS      (1 << 1)
+#define EFLAGS_IF_1     (1 << 9)
+#define ELFAGS_IF_0     0
+#define ELFAGS_IOPL_3   (3 << 12)
+#define EFLAGS_IOPL_0   (0 << 12)
+
 #endif
 
 /*选择子结构

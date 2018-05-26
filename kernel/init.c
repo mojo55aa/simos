@@ -7,6 +7,7 @@
 #include "thread.h"
 #include "console.h"
 #include "tss.h"
+#include "syscall_init.h"
 
 void init_os(void)
 {
@@ -18,4 +19,5 @@ void init_os(void)
     thread_init();
     console_init();
     tss_init();
+    syscall_init();
 }

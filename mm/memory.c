@@ -16,7 +16,6 @@
 
 /*内存的一些定义*/
 #define KERNEL_STACK_TOP (PAGE_OFFEST + 0x9f000) /*内核栈顶地址,底下一个页框是内核PCB地址0xc009e000*/
-#define PAGE_DIR_TABLE 0x100000                  /*内核页表地址,物理内存1MB处*/
 #define MEM_BITMAP_BASE 0xc007e000               /*位图地址,kernel PCB位于0xc009e000处，预留32个页框，最大支持4GB内存*/
 #define KERNEL_VM_BITMAP_BASE 0xc0075000         /*内核虚拟地址池最大1GB，需要8个页框的位图*/
 
@@ -162,7 +161,7 @@ void *page_alloc(enum pool_flags pf, uint32_t pg_cnt)
         {   //TODO 失败时要完成回滚操作，以后内存回收时再补充
             return NULL;
         }
-
+        //TODO页表映射部分
         /*页表映射*/
         vm_addr_tmp += PAGE_SIZE;
     }

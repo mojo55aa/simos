@@ -9,7 +9,8 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o $(BUILD_DIR)/init.o \
 		$(BUILD_DIR)/keyboard.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o \
 		$(BUILD_DIR)/timer.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/switch.o \
 		$(BUILD_DIR)/list.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o \
-		$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o
+		$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o \
+		$(BUILD_DIR)/syscall.o $(BUILD_DIR)/syscall_init.o $(BUILD_DIR)/stdio.o
 
 ##################	NASM编译	################
 $(BUILD_DIR)/mbr.bin : boot/mbr.S
@@ -66,6 +67,16 @@ $(BUILD_DIR)/ioqueue.o : device/ioqueue.c include/os/ioqueue.h include/os/sync.h
 	gcc $(C_FLAGS) $< -o $@
 $(BUILD_DIR)/tss.o : userprog/tss.c include/os/tss.h include/os/global.h include/asm/print.h \
 			include/os/thread.h include/os/memory.h include/os/string.h include/os/stdint.h
+	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/process.o : userprog/process.c include/os/process.h include/os/global.h include/asm/print.h \
+			include/os/thread.h include/os/memory.h include/os/debug.h include/os/tss.h include/os/stdint.h
+	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/syscall.o : lib/user/syscall.c include/os/syscall.h include/os/stdint.h
+	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/syscall_init.o : userprog/syscall_init.c include/os/syscall_init.h include/os/syscall.h include/asm/print.h \
+			include/os/thread.h
+	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/stdio.o : lib/stdio.c include/os/stdio.h include/os/stdint.h include/os/string.h include/os/global.h
 	gcc $(C_FLAGS) $< -o $@
 
 
