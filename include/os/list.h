@@ -28,9 +28,11 @@ struct general_queue{
 void list_init(struct kernel_list *list);
 void list_add(struct kernel_list *head, struct kernel_list *new);
 void list_add_prev(struct kernel_list *head, struct kernel_list *new);
-void list_del(struct kernel_list *node);
+struct kernel_list* list_del(struct kernel_list *node);
 void list_del_safe(struct kernel_list *node);
 uint32_t list_len(struct kernel_list *node);
+bool list_empty(struct kernel_list *list);
+struct kernel_list *list_pop(struct kernel_list *list);
 bool list_find_item(struct kernel_list *list, struct kernel_list *node);
 void list_for_each(struct kernel_list *list);
 

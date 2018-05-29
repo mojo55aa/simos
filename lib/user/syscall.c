@@ -63,3 +63,15 @@ uint32_t write(char* str)
 {
     return _syscall1(__NR_write, str);
 }
+
+/* malloc系统调用 */
+void *malloc(uint32_t size)
+{
+    return _syscall1(__NR_malloc, size);
+}
+
+/* free系统调用 */
+void free(void* ptr)
+{
+    _syscall1(__NR_free, ptr);
+}

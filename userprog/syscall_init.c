@@ -4,6 +4,7 @@
 #include "print.h"
 #include "console.h"
 #include "string.h"
+#include "memory.h"
 
 
 #define SYSCALL_CNT     32  /*目前系统调用数量*/
@@ -41,6 +42,7 @@ uint32_t sys_write(char* str)
     return strlen(str);
 }
 
+
 /**
  * syscall_init 系统调用初始化
  * 注册所有的系统调用
@@ -50,5 +52,7 @@ void syscall_init(void)
     put_str("syscall initialization start\n");
     register_syscall(__NR_getpid, sys_getpid);
     register_syscall(__NR_write, sys_write);
+    register_syscall(__NR_malloc, sys_malloc);
+    register_syscall(__NR_free, sys_free);
     put_str("syscall initialization complation\n");
 }

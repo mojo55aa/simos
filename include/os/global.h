@@ -7,6 +7,7 @@
 #define TRUE 1
 #define FALSE 0
 #define bool int
+#define DIV_ROUND_UP(X, STEP) ((X + STEP - 1) / (STEP))
 
 
 //------------------选择子定义

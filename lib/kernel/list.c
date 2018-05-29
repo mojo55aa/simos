@@ -62,11 +62,12 @@ static inline void __list_del(struct kernel_list* prev, struct kernel_list* next
  * list_del --删除一个节点,删除后node节点prev和next指向NULL
  * @node: 待删除的节点
 */
-void list_del(struct kernel_list* node)
+struct kernel_list* list_del(struct kernel_list* node)
 {
     __list_del(node->prev, node->next);
     node->next = NULL;
     node->prev = NULL;
+    return node;
 }
 
 /**
@@ -77,6 +78,15 @@ void list_del_safe(struct kernel_list* node)
 {
     __list_del(node->prev, node->next);
     list_init(node);
+}
+
+/**
+ * list_pop --删除链表头节点的下一个节点并返回
+ * @list: 链表
+*/
+struct kernel_list* list_pop(struct kernel_list* list)
+{
+    return list_del(list->next);
 }
 
 /**
@@ -93,6 +103,16 @@ uint32_t list_len(struct kernel_list* node)
         p = p->next;
     }
     return len;
+}
+
+/**
+ * list_empty --判断链表是否为空
+ * @list: 链表
+ * return: BOOL
+*/
+bool list_empty(struct kernel_list* list)
+{
+    return (list_len(list) > 0) ? FALSE : TRUE;
 }
 
 /**
@@ -132,8 +152,8 @@ void list_for_each(struct kernel_list* list)
     struct kernel_list *p = list;
     do
     {
+        // put_hex(p);
         struct task_struct *task = list_entry(p, struct task_struct, thread_dispatch_queue);
-        PRINT_ADDR(task->name, task);
         p = p->next;
     } while (p->next != list);
 }
