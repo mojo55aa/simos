@@ -13,14 +13,15 @@
 #include "keyboard.h"
 #include "syscall.h"
 #include "stdio.h"
+#include "timer.h"
 
 void thread_f(void *);
 void thread_f_printf(void*);
 void k_thread_a(void *arg);
 void k_thread_b(void *arg);
 
-void (*pfunc_a)(void *) = k_thread_a;
-void (*pfunc_b)(void *) = k_thread_b;
+void (*pfunc_a)(void *) = thread_f_printf;
+void (*pfunc_b)(void *) = thread_f;
 
 int main(void)
 {
@@ -32,10 +33,10 @@ int main(void)
 	//测试缺页异常
 	// uint32_t x = *(uint32_t *)(0x15000);
 	// BREAK_POINT(6);
-	// thread_start("thread A", 2, pfunc_a, "A_ ");
+	thread_start("thread A", 2, pfunc_a, "A_ ");
 	// BREAK_POINT(5);
 	// thread_start("thread B", 1, pfunc_b, "B_ ");
-	print_bitmap();
+	// print_bitmap();
 
 	local_irq_enable();
 	//测试系统调用
@@ -57,7 +58,7 @@ int main(void)
 	//=============================
 
 	//测试sys_free==================
-	void *addr1 = sys_malloc(512);
+	// void *addr1 = sys_malloc(512);
 	// void* addr2 = sys_malloc(512);
 	// sys_malloc(512);
 	// sys_malloc(512);
@@ -65,8 +66,8 @@ int main(void)
 	// sys_malloc(512);
 	// sys_malloc(512);
 	// void *addr2 = sys_malloc(512);
-	print_bitmap();
-	sys_free(addr1);
+	// print_bitmap();
+	// sys_free(addr1);
 	// sys_free(addr2);
 	// void *addr3 = sys_malloc(512);
 
@@ -74,14 +75,14 @@ int main(void)
 	// printf("0x%x\n", (uint32_t)addr2);
 	// printf("0x%x\n", (uint32_t)addr3);
 	//=============================
-	print_bitmap();
+	// print_bitmap();
 
 	while (1)
 	{
-		// console_str("MAIN ");
-		;
-	}
-	return 0;
+		console_str("MAIN ");
+        mil_sleep(1000);
+    }
+    return 0;
 }
 
 //测试生产者消费者
@@ -109,7 +110,7 @@ void thread_f_printf(void* argc)
 	while(1)
 	{
 		// console_str(ch);
-		printf("name: %s pid: %d%c",get_cur_task()->name, get_cur_task()->pid,'\n');
+		// printf("name: %s pid: %d%c",get_cur_task()->name, get_cur_task()->pid,'\n');
 		;
 	}
 }

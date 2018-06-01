@@ -1,3 +1,8 @@
+/**
+ * ISSUES
+ * (1)链表list_find_item有bug，在长度是0的情况下已让能找到元素
+ * (2)链表可能需要重构，对链表元素kernel_list进行一层封装
+*/
 #include "list.h"
 #include "stdint.h"
 #include "global.h"

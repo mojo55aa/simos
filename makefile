@@ -10,7 +10,8 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o $(BUILD_DIR)/init.o \
 		$(BUILD_DIR)/timer.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/switch.o \
 		$(BUILD_DIR)/list.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o \
 		$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o \
-		$(BUILD_DIR)/syscall.o $(BUILD_DIR)/syscall_init.o $(BUILD_DIR)/stdio.o
+		$(BUILD_DIR)/syscall.o $(BUILD_DIR)/syscall_init.o $(BUILD_DIR)/stdio.o \
+		$(BUILD_DIR)/kstdio.o $(BUILD_DIR)/ide.o
 
 ##################	NASM编译	################
 $(BUILD_DIR)/mbr.bin : boot/mbr.S
@@ -77,6 +78,11 @@ $(BUILD_DIR)/syscall_init.o : userprog/syscall_init.c include/os/syscall_init.h 
 			include/os/thread.h
 	gcc $(C_FLAGS) $< -o $@
 $(BUILD_DIR)/stdio.o : lib/stdio.c include/os/stdio.h include/os/stdint.h include/os/string.h include/os/global.h
+	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/kstdio.o : lib/kernel/kstdio.c include/os/kstdio.h include/os/stdio.h include/os/console.h include/os/global.h
+	gcc $(C_FLAGS) $< -o $@
+$(BUILD_DIR)/ide.o : device/ide.c include/os/ide.h include/os/stdio.h include/os/stdio.h include/os/global.h \
+			include/os/debug.h include/os/kstdio.h
 	gcc $(C_FLAGS) $< -o $@
 
 

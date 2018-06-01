@@ -4,9 +4,6 @@
 #include "debug.h"
 #include "print.h"
 
-#define va_start(ap, v) ap = (va_list)&v /*ap指向第一个固定参数v*/
-#define va_arg(ap, t) *((t *)(ap += 4))  /*ap指向下一个参数并返回值*/
-#define va_end(ap) ap = NULL             /*清理ap，指向NULL*/
 
 /**
  * itoa --将整形数转换成字符串

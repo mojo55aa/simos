@@ -8,6 +8,7 @@
 #include "console.h"
 #include "tss.h"
 #include "syscall_init.h"
+#include "ide.h"
 
 void init_os(void)
 {
@@ -20,4 +21,5 @@ void init_os(void)
     console_init();
     tss_init();
     syscall_init();
+    ide_init();
 }

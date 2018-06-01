@@ -84,5 +84,6 @@ void thread_init();
 void schedule();
 void thread_block(enum task_status set_status);
 void thread_unblock(struct task_struct *wake_task);
+void thread_yield();
 
 #endif

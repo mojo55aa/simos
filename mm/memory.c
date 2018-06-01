@@ -1,6 +1,7 @@
 /* ISSUES
  * 内存分配起始地址不是自然页
  * 创建页表过程可能还有问题，第一个页表第一项应该是0x0007   :::resolved
+ * 小粒度内存分配测试前后位图不一样，有可能是位图操作有问题
 */
 #include "../include/os/memory.h"
 #include "../include/os/bitmap.h"

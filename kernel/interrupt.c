@@ -142,8 +142,8 @@ static void pic_8259A_init(void)
 	outb(PIC_S_DATA, 0x01);
 
 	//打开主片IR0，目前只接受时钟中断
-	outb(PIC_M_DATA, 0xfc);	//键盘中断fd，时钟中断fe
-	outb(PIC_S_DATA, 0xff);
+	outb(PIC_M_DATA, 0xf8);	//打开定时器，键盘，从片级联中断
+	outb(PIC_S_DATA, 0xbf);	//打开从片IRQ14，接受硬盘中断
 
 	put_str("    PIC initialization completion\n");
 }

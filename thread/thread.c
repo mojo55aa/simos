@@ -16,7 +16,8 @@
 
 /*一些全局变量*/
 struct task_struct *main_thread;        /*主线程PCB*/
-struct general_queue thread_ready_queue;  /*就绪队列*/
+struct task_struct *idle_thread;        /* cpu_idle进程 */
+struct general_queue thread_ready_queue; /*就绪队列*/
 struct kernel_list thread_total_list;   /*全部进程链表*/
 struct task_struct *current_task;       /*当前任务PCB*/
 struct lock pid_lock;       /*分配PID时的锁*/
@@ -184,8 +185,7 @@ void schedule()
     /*获取之前判断队列为空就转入idle执行*/
     if(thread_ready_queue.queue_len == 0)
     {//TODO 实现idle进程:在就绪队列加入指向idle的指针
-        put_str("CPU IDLE\n");
-        return;
+        thread_unblock(idle_thread);
     }
     struct kernel_list *_next = queue_out(&thread_ready_queue);
 
@@ -239,6 +239,38 @@ void thread_unblock(struct task_struct* wake_task)
     set_intr_status(old_status);
 }
 
+/**
+ * idle --系统空闲时CPU停机，就绪队列中没有任务可以调度
+*/
+static void cpu_idle()
+{
+    while(1)
+    {
+        /* 首次执行这个进程会阻塞自己，调度器唤醒后CPU进入停机状态
+        中断唤醒CPU后while循环会阻塞cpu_idle，直到被主动唤醒 */
+        thread_block(TASK_BLOCKED);
+        put_str("CPU IDLE\n");
+        asm volatile("sti; hlt"
+                     :
+                     :
+                     : "memory");
+    }
+}
+
+/**
+ * thread_yield --主动让出CPU，加入就绪队列
+*/
+void thread_yield()
+{
+    struct task_struct *cur_task = get_cur_task();
+    enum intr_status old_status = local_irq_disable();
+    ASSERT(!list_find_item(thread_ready_queue.front, &cur_task->thread_dispatch_queue));
+    queue_in(&thread_ready_queue, &cur_task->thread_dispatch_queue);
+    cur_task->status = TASK_READY;
+    schedule();
+    set_intr_status(old_status);
+}
+
 void thread_init()
 {
     put_str("thread initialization start\n");
@@ -247,5 +279,6 @@ void thread_init()
     lock_init(&pid_lock);
     current_task = (struct task_struct *)0xc009e000; /*第一个任务指向主进程PCB*/
     init_main_thread();
+    idle_thread = thread_start("cpu_idle", 1, cpu_idle, NULL);
     put_str("thread initialization completion\n");
 }
