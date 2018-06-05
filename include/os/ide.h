@@ -26,6 +26,8 @@ struct disk{
     uint8_t dev_no;                     /* 主盘1，从盘0 */
     struct partition prim_parts[4];     /* 主分区最多4个 */
     struct partition logic_parts[8];    /* 逻辑分区最多支持8个 */
+    uint8_t prim_cnt;
+    uint8_t logic_cnt;
 };
 
 /* IDE通道结构 */

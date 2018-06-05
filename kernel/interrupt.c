@@ -54,6 +54,7 @@ static void ignore_intr_handler(uint8_t ver_n)
 		put_hex(address);
 	}
 	put_char('\n');
+	put_hex(ver_n);
 	put_str(trap_name[ver_n]);
 
 	while(1)

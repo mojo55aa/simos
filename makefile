@@ -1,4 +1,5 @@
 BUILD_DIR = ./build
+BOCHS_DIR = /home/format/simos
 ENTRY_POINT = 0xc0015000
 LIB = -I include/asm -I include/os
 C_FLAGS = -Wall -m32 $(LIB) -c -fno-stack-protector -fno-builtin
@@ -98,17 +99,17 @@ mk_dir:
 
 hd :
 	dd if=$(BUILD_DIR)/kernel.bin \
-	   of=/usr/local/bochs-2.6.9/hd64.img \
+	   of=$(BOCHS_DIR)/hd64.img \
 	   bs=512 count=200 seek=9 conv=notrunc
 
 loader :
 	dd if=$(BUILD_DIR)/loader.bin \
-		of=/usr/local/bochs-2.6.9/hd64.img \
+		of=$(BOCHS_DIR)/hd64.img \
 		bs=512 count=4 seek=2 conv=notrunc
 
 mbr :
 	dd if=$(BUILD_DIR)/mbr.bin \
-		of=/usr/local/bochs-2.6.9/hd64.img \
+		of=$(BOCHS_DIR)/hd64.img \
 		bs=512 count=1 seek=0 conv=notrunc
 
 clean: 
@@ -117,7 +118,7 @@ clean:
 build : $(BUILD_DIR)/kernel.bin
 
 bochs:
-	cd /usr/local/bochs-2.6.9 && bochs -f bochsrc
+	cd $(BOCHS_DIR) && bochs -f bochsrc
 all: mk_dir build hd bochs
 rebuild: clean all
 rebuildall: clean $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin build mbr loader hd bochs
