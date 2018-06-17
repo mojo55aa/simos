@@ -1,10 +1,15 @@
+/**
+ * ISSUSE
+ * 1.fine_next_bit()循环次数过多，每次需要扫描整个位图
+ *      solution：参数中加入一个最大扫描距离
+*/
 #include "stdint.h"
 #include "bitmap.h"
 #include "string.h"
 #include "debug.h"
 #include "global.h"
 
-static int64_t find_next_bit(struct bitmap *bitmap, uint32_t offest);
+static int64_t find_next_bit(struct bitmap *bitmap, uint32_t offest, uint32_t max_offest);
 static inline bool test_bit(struct bitmap *bitmap, uint32_t bit_idx);
 static int64_t find_next_zero_bit(struct bitmap *bitmap, uint32_t offest);
 
@@ -76,8 +81,8 @@ int64_t bitmap_apply(struct bitmap* bitmap, uint32_t nbits)
 
     for (; __base_idx < __btmp_bits || __top_idx < __btmp_bits; )
     {
-        /*__top_idx后移*/
-        __top_idx = find_next_bit(bitmap, ++__base_idx);
+        /*__top_idx后移,找到下一个已经使用的bit位，比较和__base_idx的距离*/
+        __top_idx = find_next_bit(bitmap, __base_idx + 1, nbits - 1);
         /*如果找不到已用位并且位图总bit偏移 - __base_idx数比nbits大，则找到,否则返回-1*/
         if(__top_idx == -1)
         {
@@ -92,15 +97,31 @@ int64_t bitmap_apply(struct bitmap* bitmap, uint32_t nbits)
         if(__top_idx - __base_idx >= nbits)
             return __base_idx;
         /*__base_idx后移*/
-        __base_idx = find_next_zero_bit(bitmap, ++__top_idx);
+        __base_idx = find_next_zero_bit(bitmap, __top_idx + 1);
     }
     return -1;
 }
 
 /**
+ * bitmap_set_bits --在位图中设置连续的n位
+ * @bitmap: 位图
+ * @bit_idx: 起始bit偏移
+ * @nbits: 设置的位数
+ * @bit_status: 设置的bit状态
+*/
+void bitmap_set_bits(struct bitmap *bitmap, uint32_t bit_idx, uint32_t nbits, enum bit_status bit)
+{
+    int i = bit_idx;
+    for (; i < bit_idx + nbits; i++)
+    {
+        bitmap_set_bit(bitmap, bit_idx, bit);
+    }
+}
+
+/**
  * find_next_zero_bit --找到下一个可用位
  * @bitmap: 位图
- * @offest: 起始bit偏移
+ * @offest: 起始bit偏移,包括offest本身
  * return: 成功返回bit在位图中偏移，失败返回-1
 */
 static int64_t find_next_zero_bit(struct bitmap* bitmap, uint32_t offest)
@@ -120,20 +141,22 @@ static int64_t find_next_zero_bit(struct bitmap* bitmap, uint32_t offest)
 /**
  * find_next_bit --返回下一个已用位
  * @bitmap: 位图
- * @offest: 起始bit偏移
+ * @offest: 起始bit偏移,包括offest本身
+ * @max_offest: 查找次数
  * return: 成功返回bit在位图中偏移，失败返回-1
 */
-static int64_t find_next_bit(struct bitmap* bitmap, uint32_t offest)
+static int64_t find_next_bit(struct bitmap* bitmap, uint32_t offest, uint32_t max_offest)
 {
     ASSERT(bitmap != NULL && bitmap->bitmap != NULL);
     ASSERT(offest < (bitmap->bitmap_bytes_len * BIT_PER_LONG));
+    uint32_t count = 0;
     do
     {
         if (test_bit(bitmap, offest))
         {
             return offest;
         }
-    } while ((++offest) < (bitmap->bitmap_bytes_len * BIT_PER_LONG));
+    } while ((++offest) < (bitmap->bitmap_bytes_len * BIT_PER_LONG) && ++count < max_offest);
     return -1;
 }
 

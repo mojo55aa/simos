@@ -78,7 +78,8 @@ char* strcpy(char* _dst, const char* _src)
     char* tmp = _dst;
 
     while((*tmp++ = *_src++) != '\0')
-        /*nothing to do*/
+        ;
+    /*nothing to do*/
     return _dst;
 }
 
@@ -170,7 +171,8 @@ char* strcat(char* _dst, const char* _src)
     while(*__p)
         __p++;
     while((*__p++ = *_src++) != '\0')
-        /*do nothing*/
+        ;
+    /*do nothing*/
 
     return _dst;
 }

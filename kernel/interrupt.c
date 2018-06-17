@@ -16,7 +16,9 @@ step 3. 加载idt
 #define PIC_S_CTRL	0xa0		//从片控制端口
 #define PIC_S_DATA	0xa1		//从片数据端口
 
-#define IDT_DESC_CNT 0x30	//中断数量
+#define IDT_DESC_CNT 0x81	//中断数量
+
+#define SYSCALL_NUMBER	0x80	//系统调用中断号
 
 //中断门描述符结构体
 struct gate_descr{
@@ -34,6 +36,7 @@ static struct gate_descr idt[IDT_DESC_CNT];		//中断描述符表
 intr_handler irqaction_t[IDT_DESC_CNT];	//中断服务程序数组
 extern intr_handler intr_entry_table[IDT_DESC_CNT];	//中断处理函数入口数组
 char* trap_name[IDT_DESC_CNT];		//保存中断名字
+extern uint32_t syscall_handler(void);	//系统调用入口函数，在interrupt_s.S中定义
 
 //通用中断处理程序
 static void ignore_intr_handler(uint8_t ver_n)
@@ -42,7 +45,16 @@ static void ignore_intr_handler(uint8_t ver_n)
 	{
 		return;
 	}
+	if(ver_n == 14)
+	{
+		put_str("\nPage Fault CR2: 0x");
+		uint32_t address = 0;
+		asm volatile("movl %%cr2,%0"
+					 : "=r"(address));
+		put_hex(address);
+	}
 	put_char('\n');
+	put_hex(ver_n);
 	put_str(trap_name[ver_n]);
 
 	while(1)
@@ -74,7 +86,7 @@ static void trap_init()
    	trap_name[11] = "#NP Segment Not Present";				//段不存在					故障		 Y
    	trap_name[12] = "#SS Stack Fault Exception";			//堆栈异常					故障		 Y
    	trap_name[13] = "#GP General Protection Exception";		//一般保护异常				 故障		  Y
-   	trap_name[14] = "#PF Page-Fault Exception";				//页异常					故障		 Y
+   	trap_name[14] = "#PF Page-Fault Exception";				//缺页异常					故障		 Y
    	//第15项是intel保留项，未使用																		N
    	trap_name[16] = "#MF x87 FPU Floating-Point Error";		//浮点处理器错误			  故障		   N
    	trap_name[17] = "#AC Alignment Check Exception";		//对齐检查					故障		  Y
@@ -110,6 +122,8 @@ static void idt_init(void)
 	{
 		create_idt_desc(&idt[i], IDT_ATTR_DPL0, intr_entry_table[i]);
 	}
+	/*单独处理系统调用描述符，DPL为3*/
+	create_idt_desc(&idt[SYSCALL_NUMBER], IDT_ATTR_DPL3, syscall_handler);
 	put_str("    idt initialization completion\n");
 }
 
@@ -129,8 +143,8 @@ static void pic_8259A_init(void)
 	outb(PIC_S_DATA, 0x01);
 
 	//打开主片IR0，目前只接受时钟中断
-	outb(PIC_M_DATA, 0xfd);	//键盘中断
-	outb(PIC_S_DATA, 0xff);
+	outb(PIC_M_DATA, 0xf8);	//打开定时器，键盘，从片级联中断
+	outb(PIC_S_DATA, 0xbf);	//打开从片IRQ14，接受硬盘中断
 
 	put_str("    PIC initialization completion\n");
 }
@@ -158,20 +172,24 @@ void interrupt_init(void)
 	}while(0)
 
 /*开中断*/
-void local_irq_enable(void)
+enum intr_status local_irq_enable(void)
 {
-	if(INTR_OFF == get_intr_status())
+	enum intr_status old_status = get_intr_status();
+	if(INTR_OFF == old_status)
 	{
 		asm volatile("sti":::"memory");
 	}
+	return old_status;
 }
 /*关中断*/
-void local_irq_disable(void)
+enum intr_status local_irq_disable(void)
 {
-	if(INTR_ON == get_intr_status())
+	enum intr_status old_status = get_intr_status();
+	if(INTR_ON == old_status)
 	{
 		asm volatile("cli":::"memory");
 	}
+	return old_status;
 }
 /*设置中断状态*/
 void set_intr_status(enum intr_status status)

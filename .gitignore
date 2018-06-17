@@ -53,3 +53,6 @@ dkms.conf
 
 # ignore directories
 /.vscode/*
+bochsrc
+hd64.img
+hd80.img

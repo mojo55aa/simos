@@ -1,6 +1,6 @@
 #ifndef __KERNEL_DEBUG_H
 #define __KERNEL_DEBUG_H
-
+#include "print.h"
 /*打印错误信息
 *文件名
 *行号
@@ -24,5 +24,27 @@ void debug_out(const char* filename, int line, const char* func, const char* con
             ASSERT_FAILED(#CONDITION);\
         }}while(0)
 #endif  /*NODEBUG*/
+
+/*设置一个断点信息*/
+#define BREAK_POINT(n)  do{\
+            put_str("\ncheck_point ");\
+            put_hex(n);\
+            put_char('\n');\
+        }while (0)
+
+/*打印地址信息*/
+#define PRINT_ADDR(name, addr) \
+    do                         \
+    {                          \
+        put_char('\n');\
+        if (name != "")        \
+        {                      \
+            put_str(name);     \
+            put_str(" : ");    \
+        }                      \
+        put_str("0x");\
+        put_hex(addr);\
+        put_char('\n');        \
+    } while (0)
 
 #endif  /*__KERNEL_DEBUG_H*/

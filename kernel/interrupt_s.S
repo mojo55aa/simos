@@ -97,3 +97,27 @@ VECTOR 0x2c,ZERO	;PS/2鼠标
 VECTOR 0x2d,ZERO	;FPU浮点单元异常
 VECTOR 0x2e,ZERO	;AT Winchester 串口硬盘(ATA)
 VECTOR 0x2f,ZERO	;保留
+
+[bits 32]
+extern syscall_table
+section .text
+global syscall_handler
+syscall_handler:
+	;保存上下文环境
+	push 0		;错误码占位
+	push ds
+	push es
+	push fs
+	push gs
+	pushad		;eax ecx edx ebx esp ebp esi edi
+	push 0x80	;压入中断号
+	;传入系统调用参数
+	push edx	;第3个参数
+	push ecx	;第2个参数
+	push ebx	;第1个参数
+	;调用子功能处理函数，子功能号在eax寄存器中
+	call [syscall_table + eax*4]
+	add esp, 12
+	;将返回值存入内核栈中eax的位置，从中断返回自动pop到eax寄存器
+	mov [esp + 8*4], eax	;ABI约定，结果保存在eax中,push 0x80压入4字节,pushad eax最先入栈，压入8个寄存器
+	jmp intr_exit
